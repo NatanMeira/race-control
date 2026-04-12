@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="pt-PT">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Race Control | F1 Strategy Dashboard</title>
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&family=Share+Tech+Mono&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      :root {
+        --f1-red: #e10600;
+        --f1-dark: #15151e;
+        --panel-bg: #1f1f27;
+        --text-light: #f3f3f3;
+        --text-muted: #8b8b99;
+        --box-yellow: #ffea00;
+        --stay-green: #00d2be; /* Estilo verde Mercedes/Aston */
+      }
+
+      body {
+        font-family: "Rajdhani", sans-serif;
+        background-color: var(--f1-dark);
+        color: var(--text-light);
+        margin: 0;
+        padding: 40px 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        background-image:
+          linear-gradient(rgba(21, 21, 30, 0.9), rgba(21, 21, 30, 0.9)),
+          repeating-linear-gradient(
+            45deg,
+            #111 0,
+            #111 2px,
+            transparent 2px,
+            transparent 8px
+          );
+      }
+
+      .dashboard {
+        background: var(--panel-bg);
+        width: 100%;
+        /* Aumentado para 800px para acomodar bem as duas colunas */
+        max-width: 800px;
+        padding: 30px 40px;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+        border-top: 6px solid var(--f1-red);
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 30px;
+        border-bottom: 1px solid #333;
+        padding-bottom: 15px;
+      }
+
+      .header h1 {
+        margin: 0;
+        font-size: 2.5rem;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+      }
+
+      .header span {
+        color: var(--f1-red);
+      }
+
+      /* MAGIA DAS DUAS COLUNAS AQUI */
+      .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 25px 30px; /* 25px entre linhas, 30px entre colunas */
+      }
+
+      .input-group {
+        display: flex;
+        flex-direction: column;
+        text-align: left;
+      }
+
+      /* O 5º campo (ímpar) ocupa as duas colunas para fechar o layout de forma simétrica */
+      .input-group.full-width {
+        grid-column: span 2;
+      }
+
+      .input-group label {
+        font-weight: 700;
+        font-size: 1.1rem;
+        margin-bottom: 5px;
+        color: #ccc;
+      }
+
+      .input-group input,
+      .input-group select {
+        background: #111;
+        color: var(--box-yellow);
+        font-family: "Share Tech Mono", monospace;
+        font-size: 1.2rem;
+        border: 1px solid #444;
+        padding: 12px;
+        border-radius: 6px;
+        outline: none;
+        transition: 0.3s;
+        width: 100%;
+        box-sizing: border-box;
+      }
+
+      .input-group input:focus,
+      .input-group select:focus {
+        border-color: var(--f1-red);
+        box-shadow: 0 0 8px rgba(225, 6, 0, 0.3);
+      }
+
+      .input-group small {
+        font-family: "Rajdhani", sans-serif;
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        margin-top: 6px;
+        line-height: 1.3;
+      }
+
+      .btn-predict {
+        width: 100%;
+        padding: 18px;
+        margin-top: 35px;
+        background: var(--f1-red);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-family: "Rajdhani", sans-serif;
+        font-size: 1.5rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: all 0.2s;
+        letter-spacing: 2px;
+      }
+
+      .btn-predict:hover {
+        background: #b00500;
+        transform: translateY(-2px);
+      }
+
+      /* Área de Resultado */
+      #resultado {
+        margin-top: 30px;
+        padding: 20px;
+        border-radius: 8px;
+        font-size: 2rem;
+        font-weight: 700;
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        display: none;
+        font-family: "Share Tech Mono", monospace;
+      }
+
+      @keyframes piscarBox {
+        0% {
+          background-color: var(--box-yellow);
+          color: #000;
+          box-shadow: 0 0 20px var(--box-yellow);
+        }
+        50% {
+          background-color: var(--f1-red);
+          color: #fff;
+          box-shadow: 0 0 20px var(--f1-red);
+        }
+        100% {
+          background-color: var(--box-yellow);
+          color: #000;
+          box-shadow: 0 0 20px var(--box-yellow);
+        }
+      }
+
+      .box-alert {
+        animation: piscarBox 1s infinite;
+        border: 3px solid #000;
+      }
+
+      .stay-alert {
+        background-color: var(--stay-green);
+        color: #000;
+        box-shadow: 0 0 15px rgba(0, 210, 190, 0.4);
+        border: 3px solid #057066;
+      }
+
+      /* Responsividade: Volta a 1 coluna em ecrãs pequenos (telemóveis) */
+      @media (max-width: 650px) {
+        .form-grid {
+          grid-template-columns: 1fr;
+        }
+        .input-group.full-width {
+          grid-column: span 1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="dashboard">
+      <div class="header">
+        <h1>Race <span>Control</span></h1>
+        <p
+          style="
+            margin: 5px 0 0 0;
+            color: var(--text-muted);
+            font-family: &quot;Share Tech Mono&quot;;
+          "
+        >
+          LIVE TELEMETRY MODEL
+        </p>
+      </div>
+
+      <div class="form-grid">
+        <div class="input-group">
+          <label>Pneu Atual (Compound)</label>
+          <select id="Compound">
+            <option value="SOFT">SOFT (Macio - Vermelho)</option>
+            <option value="MEDIUM">MEDIUM (Médio - Amarelo)</option>
+            <option value="HARD">HARD (Duro - Branco)</option>
+            <option value="INTERMEDIATE">INTERMEDIATE (Interm. - Verde)</option>
+            <option value="WET">WET (Chuva Forte - Azul)</option>
+          </select>
+          <small
+            >O composto define a aderência base. Pneus mais macios degradam
+            abruptamente.</small
+          >
+        </div>
+
+        <div class="input-group">
+          <label>Vida do Pneu (TyreLife)</label>
+          <input
+            type="number"
+            id="TyreLife"
+            placeholder="Ex: 18"
+            step="1"
+            required
+          />
+          <small
+            >Voltas completadas com este jogo. Um pneu Macio com 18 voltas está
+            no limite.</small
+          >
+        </div>
+
+        <div class="input-group">
+          <label>Degradação Acumulada</label>
+          <input
+            type="number"
+            id="Cumulative_Degradation"
+            placeholder="Ex: 12.5"
+            step="0.1"
+            required
+          />
+          <small
+            >Índice térmico e estrutural de perda de borracha. Valores altos
+            indicam "Cliff".</small
+          >
+        </div>
+
+        <div class="input-group">
+          <label>Delta de Tempo (LapTime Delta)</label>
+          <input
+            type="number"
+            id="LapTime_Delta"
+            placeholder="Ex: 1.25"
+            step="0.01"
+            required
+          />
+          <small
+            >Diferença em relação à volta ideal (segundos). Valores positivos
+            indicam perda de ritmo.</small
+          >
+        </div>
+
+        <div class="input-group full-width">
+          <label>Posição Atual na Corrida (Track Pos)</label>
+          <input
+            type="number"
+            id="Position"
+            placeholder="Ex: 4"
+            step="1"
+            required
+          />
+          <small
+            >A estratégia muda drasticamente se o piloto estiver a liderar
+            (defender) ou no meio do pelotão (atacar/undercut).</small
+          >
+        </div>
+      </div>
+
+      <button class="btn-predict" onclick="predictStrategy()" id="btnSubmit">
+        Executar Modelo
+      </button>
+
+      <div id="resultado"></div>
+    </div>
+
+    <script>
+      async function predictStrategy() {
+        const btn = document.getElementById("btnSubmit");
+        const divRes = document.getElementById("resultado");
+
+        const tyreLife = document.getElementById("TyreLife").value;
+        if (!tyreLife) {
+          alert("Por favor, insira a Vida do Pneu.");
+          return;
+        }
+
+        const data = {
+          Compound: document.getElementById("Compound").value,
+          TyreLife: parseFloat(tyreLife),
+          Cumulative_Degradation: parseFloat(
+            document.getElementById("Cumulative_Degradation").value || 0,
+          ),
+          LapTime_Delta: parseFloat(
+            document.getElementById("LapTime_Delta").value || 0,
+          ),
+          Position: parseInt(document.getElementById("Position").value || 1),
+        };
+
+        btn.innerText = "A ANALISAR TELEMETRIA...";
+        btn.style.opacity = "0.7";
+        divRes.style.display = "none";
+
+        try {
+          const response = await fetch("http://127.0.0.1:8000/predict", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+          });
+
+          const result = await response.json();
+
+          divRes.style.display = "block";
+
+          if (result.prediction === 1) {
+            divRes.className = "box-alert";
+            divRes.innerText = "🚨 BOX BOX BOX 🚨";
+          } else {
+            divRes.className = "stay-alert";
+            divRes.innerText = "🟢 STAY OUT";
+          }
+        } catch (error) {
+          alert("Erro de comunicação com o Pit Wall (Backend desligado?).");
+          console.error(error);
+        } finally {
+          btn.innerText = "Executar Modelo";
+          btn.style.opacity = "1";
+        }
+      }
+    </script>
+  </body>
+</html>
