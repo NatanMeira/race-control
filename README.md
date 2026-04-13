@@ -86,7 +86,7 @@ pip install -r requirements.txt
 
 ```bash
 cd ml
-python treinar.py
+python model_trainer.py
 ```
 
 ### 4. Executar a API
