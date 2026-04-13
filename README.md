@@ -12,6 +12,7 @@ Este projeto implementa uma API REST com Machine Learning para auxiliar estrateg
 
 ### 🎯 Funcionalidades Principais
 
+- **🌐 Notebook**: [MVP-SPRINT-3.ipynb](https://colab.research.google.com/drive/1vxhYB1pmYVBfq-o2Co_mDC9x7FDz7MST)
 - **🧠 Modelo de ML**: Pipeline com Decision Tree otimizado
 - **🌐 API REST**: Endpoint de predição documentado com Swagger
 - **📊 Interface Web**: Dashboard interativo com tema F1
