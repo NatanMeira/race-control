@@ -1,0 +1,20 @@
+# Framework Web
+Flask==3.0.3
+flask-cors==4.0.1
+flasgger==0.9.7.1
+
+# Machine Learning
+scikit-learn==1.5.1
+pandas==2.2.2
+numpy==1.26.4
+joblib==1.4.2
+
+# Testes
+pytest==8.2.2
+pytest-cov==5.0.0
+
+# Logging e Monitoramento
+coloredlogs==15.0.1
+
+# Utilitários
+python-dotenv==1.0.1

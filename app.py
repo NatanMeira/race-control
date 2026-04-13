@@ -1,44 +1,42 @@
-from flask import Flask, request, jsonify
+from flask import Flask
 from flask_cors import CORS
-import joblib
-import pandas as pd
+from flasgger import Swagger
+import logging
+from controllers.prediction_controller import PredictionController
 
-app = Flask(__name__)
-CORS(app)
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-# Carregar o pipeline treinado
-try:
-    model = joblib.load('modelo_f1.pkl')
-    print("✅ Modelo carregado com sucesso e pronto para uso!")
-except Exception as e:
-    print(f"❌ Erro crítico ao carregar o modelo: {e}")
+def create_app():
+    """Factory para criar a aplicação Flask com configuração adequada."""
+    app = Flask(__name__)
+    CORS(app)
+    
+    # Configuração do Swagger
+    swagger = Swagger(app, template={
+        "swagger": "2.0",
+        "info": {
+            "title": "F1 Pit Stop Strategy API",
+            "description": "API para predição de estratégia de pit stop em corridas de Fórmula 1 - Arquitetura MVC Simplificada",
+            "version": "1.0.0"
+        },
+        "host": "127.0.0.1:8000",
+        "basePath": "/",
+        "schemes": ["http"]
+    })
+    
+    # Registrar blueprint do prediction controller
+    prediction_controller = PredictionController()
+    app.register_blueprint(prediction_controller.blueprint)
+    
+    logger.info("✅ Aplicação Flask com MVC simplificada inicializada!")
+    return app
 
-@app.route('/predict', methods=['POST'])
-def predict_pit_stop():
-    try:
-        data = request.get_json()
-        print(f"📥 Dados recebidos do front-end: {data}") # Para vermos o que está a chegar
-        
-        # 1. Converter para DataFrame
-        input_df = pd.DataFrame([data])
-        
-        # 2. GARANTIR a exata mesma ordem das colunas do Colab! (Isto resolve 90% dos erros 500)
-        colunas_ordem_correta = ['TyreLife', 'LapTime_Delta', 'Cumulative_Degradation', 'Position', 'Compound']
-        input_df = input_df[colunas_ordem_correta]
-        
-        # 3. Fazer a predição
-        prediction = int(model.predict(input_df)[0])
-        print(f"🧠 Predição do modelo: {prediction}")
-        
-        if prediction == 1:
-            return jsonify({"prediction": 1, "message": "BOX BOX BOX! (Chamar para o Pit Stop)"})
-        else:
-            return jsonify({"prediction": 0, "message": "STAY OUT! (Manter na pista)"})
-            
-    except Exception as e:
-        # ISTO VAI MOSTRAR O ERRO REAL NO SEU TERMINAL
-        print(f"🔥 ERRO FATAL NA ROTA /predict: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+app = create_app()
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=8000, debug=True)
 
 if __name__ == '__main__':
     app.run(debug=True, port=8000)

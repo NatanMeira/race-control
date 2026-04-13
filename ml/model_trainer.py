@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import joblib
+import os
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
@@ -13,7 +14,8 @@ from sklearn.metrics import classification_report
 
 # 1. Carga de Dados
 print("Carregando o dataset...")
-df = pd.read_csv('f1_strategy_dataset_v4.csv')
+data_path = os.path.join('data', 'f1_strategy_dataset_v4.csv')
+df = pd.read_csv(data_path)
 
 # 2. Definição de Features (X) e Target (y)
 # Escolhemos um mix perfeito de variáveis para o negócio e para o modelo
@@ -27,8 +29,12 @@ y = df['PitNextLap']
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
 
 # Guardar lote de validação para o PyTest na Fase 4
-X_test.to_csv('X_test_validation.csv', index=False)
-y_test.to_csv('y_test_validation.csv', index=False)
+# Criar diretório tests/data se não existir
+test_data_dir = '../tests/data'
+os.makedirs(test_data_dir, exist_ok=True)
+
+X_test.to_csv(os.path.join(test_data_dir, 'X_test_validation.csv'), index=False)
+y_test.to_csv(os.path.join(test_data_dir, 'y_test_validation.csv'), index=False)
 
 # 4. Criação do Transformador (Normalização para números, Encoding para categorias)
 preprocessor = ColumnTransformer(
@@ -78,5 +84,9 @@ melhor_modelo = grid_search.best_estimator_
 print(f"Melhores parâmetros encontrados: {grid_search.best_params_}")
 
 # 8. Exportação do Modelo
-joblib.dump(melhor_modelo, 'modelo_f1.pkl')
-print("\n[OK] Pipeline completo salvo como 'modelo_f1.pkl'")
+models_dir = 'models'
+os.makedirs(models_dir, exist_ok=True)
+model_path = os.path.join(models_dir, 'modelo_f1.pkl')
+
+joblib.dump(melhor_modelo, model_path)
+print(f"\n[OK] Pipeline completo salvo como '{model_path}'")
